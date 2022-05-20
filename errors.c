@@ -1,76 +1,115 @@
 #include "shell.h"
 
-/**
- * print_error - prints error messages to standard error
- * @vars: pointer to struct of variables
- * @msg: message to print
- *
- * Return: void
- */
-void print_error(vars_t *vars, char *msg)
-{
-	char *count;
+int num_len(int num);
+char *_itoa(int num);
+int create_error(char **args, int err);
 
-	_puts2(vars->argv[0]);
-	_puts2(": ");
-	count = _uitoa(vars->count);
-	_puts2(count);
-	free(count);
-	_puts2(": ");
-	_puts2(vars->av[0]);
-	if (msg)
+/**
+ * num_len - Counts the digit length of a number.
+ * @num: The number to measure.
+ *
+ * Return: The digit length.
+ */
+int num_len(int num)
+{
+	unsigned int num1;
+	int len = 1;
+
+	if (num < 0)
 	{
-		_puts2(msg);
+		len++;
+		num1 = num * -1;
 	}
 	else
-		perror("");
+	{
+		num1 = num;
+	}
+	while (num1 > 9)
+	{
+		len++;
+		num1 /= 10;
+	}
+
+	return (len);
 }
 
 /**
- * _puts2 - prints a string to standard error
- * @str: string to print
+ * _itoa - Converts an integer to a string.
+ * @num: The integer.
  *
- * Return: void
+ * Return: The converted string.
  */
-void _puts2(char *str)
+char *_itoa(int num)
 {
-	ssize_t num, len;
+	char *buffer;
+	int len = num_len(num);
+	unsigned int num1;
 
-	num = _strlen(str);
-	len = write(STDERR_FILENO, str, num);
-	if (len != num)
+	buffer = malloc(sizeof(char) * (len + 1));
+	if (!buffer)
+		return (NULL);
+
+	buffer[len] = '\0';
+
+	if (num < 0)
 	{
-		perror("Fatal Error");
-		exit(1);
+		num1 = num * -1;
+		buffer[0] = '-';
+	}
+	else
+	{
+		num1 = num;
 	}
 
+	len--;
+	do {
+		buffer[len] = (num1 % 10) + '0';
+		num1 /= 10;
+		len--;
+	} while (num1 > 0);
+
+	return (buffer);
 }
 
-/**
- * _uitoa - converts an unsigned int to a string
- * @count: unsigned int to convert
- *
- * Return: pointer to the converted string
- */
-char *_uitoa(unsigned int count)
-{
-	char *numstr;
-	unsigned int tmp, digits;
 
-	tmp = count;
-	for (digits = 0; tmp != 0; digits++)
-		tmp /= 10;
-	numstr = malloc(sizeof(char) * (digits + 1));
-	if (numstr == NULL)
+/**
+ * create_error - Writes a custom error message to stderr.
+ * @args: An array of arguments.
+ * @err: The error value.
+ *
+ * Return: The error value.
+ */
+int create_error(char **args, int err)
+{
+	char *error;
+
+	switch (err)
 	{
-		perror("Fatal Error1");
-		exit(127);
+	case -1:
+		error = error_env(args);
+		break;
+	case 1:
+		error = error_1(args);
+		break;
+	case 2:
+		if (*(args[0]) == 'e')
+			error = error_2_exit(++args);
+		else if (args[0][0] == ';' || args[0][0] == '&' || args[0][0] == '|')
+			error = error_2_syntax(args);
+		else
+			error = error_2_cd(args);
+		break;
+	case 126:
+		error = error_126(args);
+		break;
+	case 127:
+		error = error_127(args);
+		break;
 	}
-	numstr[digits] = '\0';
-	for (--digits; count; --digits)
-	{
-		numstr[digits] = (count % 10) + '0';
-		count /= 10;
-	}
-	return (numstr);
+	write(STDERR_FILENO, error, _strlen(error));
+
+	if (error)
+		free(error);
+	return (err);
+
 }
