@@ -2,7 +2,7 @@
 ======================
 
 -   By Julien Barbier
--   Project to be done in teams of 2 people (your team: Ekene Okoli, Esther Ashinedu Uvo
+-   Project to be done in teams of 2 people (your team: Mehariw Amlake, Yohannes Soressa
 
 Concepts
 --------
